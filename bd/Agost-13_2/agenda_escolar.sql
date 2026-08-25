@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-08-2026 a las 03:12:40
+-- Tiempo de generación: 25-08-2026 a las 15:22:10
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -80,13 +80,6 @@ CREATE TABLE `configuracion_sistema` (
   `anio_lectivo` varchar(10) DEFAULT NULL,
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `configuracion_sistema`
---
-
-INSERT INTO `configuracion_sistema` (`id`, `nombre_institucion`, `logo`, `anio_lectivo`, `fecha_creacion`) VALUES
-(1, 'Institución Educativa', 'logo.png', '2026', '2026-08-14 01:08:33');
 
 -- --------------------------------------------------------
 
@@ -166,11 +159,11 @@ CREATE TABLE `docente_asignacion` (
 
 CREATE TABLE `entregas` (
   `id` int(11) NOT NULL,
-  `publicacion_id` int(11) NOT NULL,
-  `estudiante_id` int(11) NOT NULL,
+  `publicacion_id` int(11) DEFAULT NULL,
+  `estudiante_id` int(11) DEFAULT NULL,
   `archivo` varchar(255) DEFAULT NULL,
   `comentario` text DEFAULT NULL,
-  `fecha_entrega` datetime NOT NULL DEFAULT current_timestamp(),
+  `fecha_entrega` datetime DEFAULT NULL,
   `calificacion` decimal(4,2) DEFAULT NULL,
   `observacion` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -210,9 +203,9 @@ CREATE TABLE `historial_password` (
 
 CREATE TABLE `lectura_publicaciones` (
   `id` int(11) NOT NULL,
-  `publicacion_id` int(11) NOT NULL,
-  `estudiante_id` int(11) NOT NULL,
-  `fecha_lectura` datetime NOT NULL DEFAULT current_timestamp()
+  `publicacion_id` int(11) DEFAULT NULL,
+  `estudiante_id` int(11) DEFAULT NULL,
+  `fecha_lectura` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -262,7 +255,6 @@ CREATE TABLE `publicaciones` (
   `docente_id` int(11) NOT NULL,
   `curso_id` int(11) NOT NULL,
   `asignatura_id` int(11) NOT NULL,
-  `periodo_id` int(11) NOT NULL,
   `titulo` varchar(255) NOT NULL,
   `descripcion` text DEFAULT NULL,
   `tipo` enum('ANUNCIO','TAREA','EVALUACION','MATERIAL') NOT NULL,
@@ -319,11 +311,20 @@ CREATE TABLE `usuarios` (
   `telefono` varchar(20) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `rol_id` int(11) NOT NULL,
-  `primer_login` tinyint(1) NOT NULL DEFAULT 0,
+  `primer_login` tinyint(1) DEFAULT 1,
   `estado` enum('ACTIVO','INACTIVO') DEFAULT 'ACTIVO',
   `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp(),
-  `requiere_cambio_password` tinyint(1) NOT NULL DEFAULT 0
+  `requiere_cambio_password` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `usuarios`
+--
+
+INSERT INTO `usuarios` (`id`, `documento`, `nombres`, `apellidos`, `email`, `telefono`, `password`, `rol_id`, `primer_login`, `estado`, `fecha_registro`, `requiere_cambio_password`) VALUES
+(1, '1001', 'Administrador', 'Principal', 'admin@agenda.com', '3000000001', '$2y$10$kb4J.eutB0KH6Qx1Ug30ouNvH90UJRSftCJUuXQICbtWrzxREFdZe', 1, 0, 'ACTIVO', '2026-08-21 12:57:32', 0),
+(2, '2001', 'Docente', 'Prueba', 'docente@agenda.com', '3000000002', '$2y$10$a5zei7SJNS80QNkyrbRinetBn8mxuSVFdvYEqGTSb.tSHr.7rByaq', 2, 0, 'ACTIVO', '2026-08-21 12:57:32', 0),
+(3, '3001', 'Estudiante', 'Prueba', 'estudiante@agenda.com', '3000000003', '$2y$10$KmarP0SAswctYc27eP4RD.0hlzC1TggHV1xDVjTnT4vEkhMgCbFgm', 3, 0, 'ACTIVO', '2026-08-21 12:57:32', 0);
 
 --
 -- Índices para tablas volcadas
@@ -359,7 +360,7 @@ ALTER TABLE `cursos`
 --
 ALTER TABLE `docente_asignacion`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_docente_curso_asignatura_periodo` (`docente_id`,`curso_id`,`asignatura_id`,`periodo_id`),
+  ADD UNIQUE KEY `docente_id` (`docente_id`,`curso_id`,`asignatura_id`),
   ADD KEY `fk_da_curso` (`curso_id`),
   ADD KEY `fk_da_asignatura` (`asignatura_id`),
   ADD KEY `fk_docente_periodo` (`periodo_id`);
@@ -369,7 +370,6 @@ ALTER TABLE `docente_asignacion`
 --
 ALTER TABLE `entregas`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_entrega_publicacion_estudiante` (`publicacion_id`,`estudiante_id`),
   ADD KEY `publicacion_id` (`publicacion_id`),
   ADD KEY `estudiante_id` (`estudiante_id`);
 
@@ -378,9 +378,8 @@ ALTER TABLE `entregas`
 --
 ALTER TABLE `estudiante_curso`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_estudiante_periodo` (`estudiante_id`,`periodo_id`),
-  ADD KEY `fk_ec_curso` (`curso_id`),
-  ADD KEY `idx_ec_periodo` (`periodo_id`);
+  ADD UNIQUE KEY `estudiante_id` (`estudiante_id`),
+  ADD KEY `fk_ec_curso` (`curso_id`);
 
 --
 -- Indices de la tabla `historial_password`
@@ -394,7 +393,6 @@ ALTER TABLE `historial_password`
 --
 ALTER TABLE `lectura_publicaciones`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_lectura_publicacion_estudiante` (`publicacion_id`,`estudiante_id`),
   ADD KEY `publicacion_id` (`publicacion_id`),
   ADD KEY `estudiante_id` (`estudiante_id`);
 
@@ -418,15 +416,13 @@ ALTER TABLE `publicaciones`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_docente` (`docente_id`),
   ADD KEY `idx_curso` (`curso_id`),
-  ADD KEY `idx_asignatura` (`asignatura_id`),
-  ADD KEY `idx_publicacion_periodo` (`periodo_id`);
+  ADD KEY `idx_asignatura` (`asignatura_id`);
 
 --
 -- Indices de la tabla `publicaciones_individuales`
 --
 ALTER TABLE `publicaciones_individuales`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_publicacion_estudiante` (`publicacion_id`,`estudiante_id`),
   ADD KEY `fk_pi_publicacion` (`publicacion_id`),
   ADD KEY `fk_pi_estudiante` (`estudiante_id`);
 
@@ -466,7 +462,7 @@ ALTER TABLE `asignaturas`
 -- AUTO_INCREMENT de la tabla `configuracion_sistema`
 --
 ALTER TABLE `configuracion_sistema`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `cursos`
@@ -538,7 +534,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Restricciones para tablas volcadas
@@ -571,8 +567,7 @@ ALTER TABLE `entregas`
 --
 ALTER TABLE `estudiante_curso`
   ADD CONSTRAINT `fk_ec_curso` FOREIGN KEY (`curso_id`) REFERENCES `cursos` (`id`),
-  ADD CONSTRAINT `fk_ec_estudiante` FOREIGN KEY (`estudiante_id`) REFERENCES `usuarios` (`id`),
-  ADD CONSTRAINT `fk_ec_periodo` FOREIGN KEY (`periodo_id`) REFERENCES `periodos_academicos` (`id`);
+  ADD CONSTRAINT `fk_ec_estudiante` FOREIGN KEY (`estudiante_id`) REFERENCES `usuarios` (`id`);
 
 --
 -- Filtros para la tabla `historial_password`
@@ -599,8 +594,7 @@ ALTER TABLE `log_accesos`
 ALTER TABLE `publicaciones`
   ADD CONSTRAINT `fk_pub_asignatura` FOREIGN KEY (`asignatura_id`) REFERENCES `asignaturas` (`id`),
   ADD CONSTRAINT `fk_pub_curso` FOREIGN KEY (`curso_id`) REFERENCES `cursos` (`id`),
-  ADD CONSTRAINT `fk_pub_docente` FOREIGN KEY (`docente_id`) REFERENCES `usuarios` (`id`),
-  ADD CONSTRAINT `fk_pub_periodo` FOREIGN KEY (`periodo_id`) REFERENCES `periodos_academicos` (`id`);
+  ADD CONSTRAINT `fk_pub_docente` FOREIGN KEY (`docente_id`) REFERENCES `usuarios` (`id`);
 
 --
 -- Filtros para la tabla `publicaciones_individuales`

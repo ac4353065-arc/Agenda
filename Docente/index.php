@@ -28,6 +28,17 @@ require_once "../includes/header.php";
             <strong>DOCENTE</strong>.
         </p>
 
+        <div class="mt-4">
+
+            <a
+                href="/Agenda/logout.php"
+                class="btn btn-danger"
+            >
+                Cerrar sesión
+            </a>
+
+        </div>
+
     </div>
 
 </div>

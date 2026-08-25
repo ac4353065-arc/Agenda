@@ -4,23 +4,19 @@ require_once "config/conexion.php";
 require_once "includes/sesion.php";
 require_once "includes/funciones.php";
 
-// Verificamos que exista una sesión iniciada.
+// Verificamos que el usuario haya iniciado sesión.
 exigirLogin();
 
-$error = "";
-$exito = "";
-
-// Solo ADMIN y DOCENTE necesitan utilizar
-// el cambio obligatorio de contraseña.
+// Solo ADMIN y DOCENTE pueden cambiar la contraseña obligatoria.
 if (
     $_SESSION["rol"] !== "ADMIN" &&
     $_SESSION["rol"] !== "DOCENTE"
 ) {
-
     header("Location: /Agenda/login.php");
     exit;
 }
 
+$error = "";
 
 // Procesamos el formulario.
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -29,8 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $passwordNueva = $_POST["password_nueva"] ?? "";
     $confirmarPassword = $_POST["confirmar_password"] ?? "";
 
-
-    // Validamos que todos los campos estén completos.
+    // Verificamos que todos los campos estén completos.
     if (
         empty($passwordActual) ||
         empty($passwordNueva) ||
@@ -39,12 +34,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         $error = "Debe completar todos los campos.";
 
-    // Verificamos que las nuevas contraseñas coincidan.
     } elseif ($passwordNueva !== $confirmarPassword) {
 
         $error = "La nueva contraseña y la confirmación no coinciden.";
 
-    // Validamos una longitud mínima sencilla.
     } elseif (strlen($passwordNueva) < 4) {
 
         $error = "La nueva contraseña debe tener mínimo 4 caracteres.";
@@ -53,11 +46,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         try {
 
-            // Consultamos nuevamente el usuario en la base de datos.
+            // Consultamos el usuario actual.
             $sql = "SELECT id, password
                     FROM usuarios
-                    WHERE id = :usuario_id
-                    LIMIT 1";
+                    WHERE id = :usuario_id";
 
             $sentencia = $conexion->prepare($sql);
 
@@ -67,12 +59,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $usuario = $sentencia->fetch();
 
-
             if (!$usuario) {
 
                 $error = "No fue posible encontrar el usuario.";
 
-            // Verificamos la contraseña actual.
             } elseif (
                 !password_verify(
                     $passwordActual,
@@ -85,14 +75,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             } else {
 
                 // Generamos el hash de la nueva contraseña.
-                $nuevoPasswordHash = password_hash(
+                $nuevoPassword = password_hash(
                     $passwordNueva,
                     PASSWORD_DEFAULT
                 );
 
-
-                // Actualizamos la contraseña y quitamos
-                // la obligación de cambiarla nuevamente.
+                // Actualizamos la contraseña.
                 $sqlActualizar = "UPDATE usuarios
                                   SET password = :password,
                                       primer_login = 0,
@@ -102,30 +90,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $actualizar = $conexion->prepare($sqlActualizar);
 
                 $actualizar->execute([
-                    ":password" => $nuevoPasswordHash,
+                    ":password" => $nuevoPassword,
                     ":usuario_id" => $_SESSION["usuario_id"]
                 ]);
 
-
-                // Actualizamos la información de la sesión.
+                // Actualizamos la sesión.
                 $_SESSION["requiere_cambio_password"] = 0;
-
 
                 // Redirigimos según el rol.
                 if ($_SESSION["rol"] === "ADMIN") {
 
-                    header(
-                        "Location: /Agenda/admin/index.php"
-                    );
-
+                    header("Location: /Agenda/admin/index.php");
                     exit;
 
                 } elseif ($_SESSION["rol"] === "DOCENTE") {
 
-                    header(
-                        "Location: /Agenda/docente/index.php"
-                    );
-
+                    header("Location: /Agenda/docente/index.php");
                     exit;
                 }
             }
@@ -136,7 +116,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 }
-
 
 $tituloPagina = "Cambiar contraseña";
 
@@ -157,12 +136,8 @@ require_once "includes/header.php";
                 </h2>
 
                 <p class="text-center text-muted">
-
-                    Por seguridad, debes cambiar
-                    tu contraseña antes de continuar.
-
+                    Por seguridad, debes cambiar tu contraseña antes de continuar.
                 </p>
-
 
                 <?php if (!empty($error)): ?>
 
@@ -173,7 +148,6 @@ require_once "includes/header.php";
                     </div>
 
                 <?php endif; ?>
-
 
                 <form method="POST">
 
@@ -196,7 +170,6 @@ require_once "includes/header.php";
 
                     </div>
 
-
                     <div class="mb-3">
 
                         <label
@@ -216,7 +189,6 @@ require_once "includes/header.php";
 
                     </div>
 
-
                     <div class="mb-4">
 
                         <label
@@ -235,7 +207,6 @@ require_once "includes/header.php";
                         >
 
                     </div>
-
 
                     <div class="d-grid">
 

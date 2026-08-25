@@ -1,6 +1,6 @@
 <?php
 
-// Iniciar sesión solamente si todavía no existe.
+// Iniciamos la sesión si todavía no está iniciada.
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -11,39 +11,40 @@ if (session_status() === PHP_SESSION_NONE) {
  */
 function exigirLogin()
 {
+    // Si no existe una sesión, enviamos al login.
     if (!isset($_SESSION["usuario_id"])) {
 
         header("Location: /Agenda/login.php");
         exit;
     }
 
-
     /*
      * Si el usuario debe cambiar su contraseña,
-     * no puede continuar hacia otras páginas.
+     * lo enviamos obligatoriamente a esa página.
      */
-    $paginaActual = basename($_SERVER["PHP_SELF"]);
-
     if (
         isset($_SESSION["requiere_cambio_password"]) &&
-        $_SESSION["requiere_cambio_password"] == 1 &&
-        $paginaActual !== "cambiar_password.php"
+        $_SESSION["requiere_cambio_password"] == 1
     ) {
 
-        header(
-            "Location: /Agenda/cambiar_password.php"
-        );
+        $paginaActual = basename($_SERVER["PHP_SELF"]);
 
-        exit;
+        // Permitimos únicamente permanecer en cambiar_password.php.
+        if ($paginaActual !== "cambiar_password.php") {
+
+            header("Location: /Agenda/cambiar_password.php");
+            exit;
+        }
     }
 }
 
 
 /**
- * Verifica que el usuario tenga uno de los roles permitidos.
+ * Verifica que el usuario tenga el rol permitido.
  */
 function exigirRol($rolesPermitidos)
 {
+    // Primero verificamos que haya iniciado sesión.
     exigirLogin();
 
     // Si se recibe un solo rol, lo convertimos en arreglo.
@@ -51,6 +52,7 @@ function exigirRol($rolesPermitidos)
         $rolesPermitidos = [$rolesPermitidos];
     }
 
+    // Verificamos el rol.
     if (
         !isset($_SESSION["rol"]) ||
         !in_array($_SESSION["rol"], $rolesPermitidos)
@@ -68,10 +70,8 @@ function exigirRol($rolesPermitidos)
  */
 function cerrarSesion()
 {
-    // Eliminamos las variables de sesión.
     $_SESSION = [];
 
-    // Destruimos la sesión.
     session_destroy();
 }
 
