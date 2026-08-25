@@ -1,15 +1,151 @@
-body {
-    background-color: #f8f9fa;
+/* =========================================
+   ESTILOS GENERALES
+========================================= */
+
+* {
+    box-sizing: border-box;
 }
 
-.navbar-brand {
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+
+/* =========================================
+   CONTENEDOR PRINCIPAL
+========================================= */
+
+.contenedor {
+    width: 85%;
+    max-width: 1200px;
+    margin: auto;
+}
+
+
+/* =========================================
+   ENCABEZADO
+========================================= */
+
+header {
+    background-color: #0d6efd;
+    color: white;
+    padding: 18px 0;
+}
+
+header h2 {
+    margin: 0;
+}
+
+
+/* =========================================
+   TARJETAS
+========================================= */
+
+.tarjeta {
+    background-color: white;
+    margin-top: 30px;
+    padding: 30px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+
+/* =========================================
+   FORMULARIOS
+========================================= */
+
+.grupo-formulario {
+    margin-bottom: 20px;
+}
+
+.grupo-formulario label {
+    display: block;
+    margin-bottom: 8px;
     font-weight: bold;
 }
 
-.card {
-    border-radius: 10px;
+.grupo-formulario input,
+.grupo-formulario textarea,
+.grupo-formulario select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 16px;
 }
+
+.grupo-formulario textarea {
+    resize: vertical;
+}
+
+
+/* =========================================
+   BOTONES
+========================================= */
+
+.btn {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.btn-primario {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-primario:hover {
+    background-color: #0b5ed7;
+}
+
+.btn-secundario {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secundario:hover {
+    background-color: #5c636a;
+}
+
+
+/* =========================================
+   MENSAJES
+========================================= */
+
+.mensaje-exito {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.mensaje-error {
+    background-color: #f8d7da;
+    color: #842029;
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+
+/* =========================================
+   PIE DE PAGINA
+========================================= */
 
 footer {
     margin-top: 40px;
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #ddd;
+    color: #555;
 }

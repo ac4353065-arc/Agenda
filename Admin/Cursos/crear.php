@@ -1,32 +1,26 @@
 <?php
-
-require_once '../../config/conexion.php';
-require_once '../../includes/auth.php';
-
-// Verificar que exista una sesión iniciada
-exigirLogin();
+require_once __DIR__ . '/../../config/conexion.php';
+require_once __DIR__ . '/../../includes/auth.php';
 
 // Verificar que el usuario sea administrador
-if ($_SESSION['rol'] !== 'ADMINISTRADOR') {
-    header('Location: ../../login.php');
-    exit;
-}
+verificarRol('ADMINISTRADOR');
 
-$mensaje = '';
-$error = '';
+$mensaje = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $nombre = trim($_POST['nombre']);
-    $descripcion = trim($_POST['descripcion']);
-    $estado = $_POST['estado'];
+    $nombre = trim($_POST["nombre"]);
+    $descripcion = trim($_POST["descripcion"]);
+    $estado = $_POST["estado"];
 
-    if ($nombre === '') {
+    // Validar que el nombre no esté vacío
+    if (empty($nombre)) {
 
-        $error = 'El nombre del curso es obligatorio.';
+        $mensaje = "El nombre del curso es obligatorio.";
 
     } else {
 
+        // Consulta para guardar el curso
         $sql = "INSERT INTO cursos (nombre, descripcion, estado)
                 VALUES (?, ?, ?)";
 
@@ -41,72 +35,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt->execute()) {
 
-            header('Location: index.php');
-            exit;
+            header("Location: index.php?mensaje=creado");
+            exit();
 
         } else {
 
-            $error = 'Ocurrió un error al guardar el curso.';
+            $mensaje = "Error al guardar el curso.";
+
         }
+
+        $stmt->close();
     }
 }
-
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
-
     <meta charset="UTF-8">
+    <title>Crear curso - Agenda Escolar</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Nuevo Curso - Agenda Escolar</title>
-
-    <link rel="stylesheet" href="../../assets/css/estilos.css">
-
+    <link rel="stylesheet"
+          href="../../assets/css/estilos.css">
 </head>
 
 <body>
 
 <header>
+    <h1>Agenda Escolar</h1>
+</header>
+
+<main>
 
     <div class="contenedor">
 
-        <h1>Agenda Escolar</h1>
+        <h2>Crear nuevo curso</h2>
 
-    </div>
+        <p>
+            Completa la información para registrar un nuevo curso.
+        </p>
 
-</header>
+        <?php if (!empty($mensaje)) { ?>
 
-
-<main class="contenedor">
-
-    <section class="card">
-
-        <h2>Nuevo Curso</h2>
-
-
-        <?php if ($error !== ''): ?>
-
-            <div class="alerta alerta-error">
-
-                <?php echo $error; ?>
-
+            <div class="mensaje-error">
+                <?php echo $mensaje; ?>
             </div>
 
-        <?php endif; ?>
+        <?php } ?>
 
+        <form method="POST">
 
-        <form method="POST" action="">
-
-            <div class="form-group">
+            <div class="grupo-formulario">
 
                 <label for="nombre">
-
                     Nombre del curso
-
                 </label>
 
                 <input
@@ -119,29 +102,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
 
-            <div class="form-group">
+            <div class="grupo-formulario">
 
                 <label for="descripcion">
-
                     Descripción
-
                 </label>
 
                 <textarea
                     id="descripcion"
                     name="descripcion"
-                    rows="4"
+                    rows="5"
                 ></textarea>
 
             </div>
 
 
-            <div class="form-group">
+            <div class="grupo-formulario">
 
                 <label for="estado">
-
                     Estado
-
                 </label>
 
                 <select
@@ -150,15 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 >
 
                     <option value="ACTIVO">
-
                         ACTIVO
-
                     </option>
 
                     <option value="INACTIVO">
-
                         INACTIVO
-
                     </option>
 
                 </select>
@@ -166,39 +141,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
 
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
+            <div class="botones">
 
-                Guardar curso
+                <button
+                    type="submit"
+                    class="btn-primario"
+                >
+                    Guardar curso
+                </button>
 
-            </button>
+                <a
+                    href="index.php"
+                    class="btn-secundario"
+                >
+                    Cancelar
+                </a>
 
-
-            <a
-                href="index.php"
-                class="btn btn-secondary"
-            >
-
-                Cancelar
-
-            </a>
+            </div>
 
         </form>
 
-    </section>
+    </div>
 
 </main>
 
-
 <footer>
 
-    <p>
-
-        Agenda Escolar &copy; 2026
-
-    </p>
+    Agenda Escolar © 2026
 
 </footer>
 
