@@ -1,176 +1,216 @@
 <?php
-require_once __DIR__ . '/../../config/conexion.php';
-require_once __DIR__ . '/../../includes/auth.php';
 
-// Verificar que el usuario sea administrador
-verificarRol('ADMINISTRADOR');
+require_once "../../config/conexion.php";
+require_once "../../includes/sesion.php";
+require_once "../../includes/funciones.php";
 
-$mensaje = "";
+// Verificamos que solo el ADMIN pueda acceder.
+exigirRol("ADMIN");
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+$error = "";
 
-    $nombre = trim($_POST["nombre"]);
-    $descripcion = trim($_POST["descripcion"]);
-    $estado = $_POST["estado"];
+// Variables para conservar los datos si ocurre un error.
+$nombre = "";
+$descripcion = "";
+$estado = "ACTIVO";
 
-    // Validar que el nombre no esté vacío
+
+// Procesamos el formulario.
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    $nombre = trim($_POST["nombre"] ?? "");
+    $descripcion = trim($_POST["descripcion"] ?? "");
+    $estado = $_POST["estado"] ?? "ACTIVO";
+
+
+    // Validamos el nombre.
     if (empty($nombre)) {
 
-        $mensaje = "El nombre del curso es obligatorio.";
+        $error = "El nombre del curso es obligatorio.";
+
+    } elseif (
+        $estado !== "ACTIVO" &&
+        $estado !== "INACTIVO"
+    ) {
+
+        $error = "El estado seleccionado no es válido.";
 
     } else {
 
-        // Consulta para guardar el curso
-        $sql = "INSERT INTO cursos (nombre, descripcion, estado)
-                VALUES (?, ?, ?)";
+        try {
 
-        $stmt = $conexion->prepare($sql);
+            // Consulta para insertar el nuevo curso.
+            $sql = "INSERT INTO cursos
+                    (nombre, descripcion, estado)
+                    VALUES
+                    (:nombre, :descripcion, :estado)";
 
-        $stmt->bind_param(
-            "sss",
-            $nombre,
-            $descripcion,
-            $estado
-        );
+            $sentencia = $conexion->prepare($sql);
 
-        if ($stmt->execute()) {
+            $sentencia->execute([
+                ":nombre" => $nombre,
+                ":descripcion" => $descripcion,
+                ":estado" => $estado
+            ]);
 
-            header("Location: index.php?mensaje=creado");
-            exit();
 
-        } else {
+            // Después de guardar regresamos al listado.
+            header(
+                "Location: /Agenda/admin/cursos/index.php"
+            );
 
-            $mensaje = "Error al guardar el curso.";
+            exit;
+
+        } catch (PDOException $e) {
+
+            $error = "Ocurrió un error al guardar el curso.";
 
         }
-
-        $stmt->close();
     }
 }
+
+
+// Título de la página.
+$tituloPagina = "Crear nuevo curso";
+
+require_once "../../includes/header.php";
+
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
+<div class="row justify-content-center">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Crear curso - Agenda Escolar</title>
+    <div class="col-md-10">
 
-    <link rel="stylesheet"
-          href="../../assets/css/estilos.css">
-</head>
+        <div class="card shadow-sm">
 
-<body>
+            <div class="card-body p-4">
 
-<header>
-    <h1>Agenda Escolar</h1>
-</header>
+                <h1 class="mb-4">
+                    Crear nuevo curso
+                </h1>
 
-<main>
+                <p>
+                    Complete la información para registrar
+                    un nuevo curso.
+                </p>
 
-    <div class="contenedor">
 
-        <h2>Crear nuevo curso</h2>
+                <?php if (!empty($error)): ?>
 
-        <p>
-            Completa la información para registrar un nuevo curso.
-        </p>
+                    <div class="alert alert-danger">
 
-        <?php if (!empty($mensaje)) { ?>
+                        <?= escapar($error) ?>
 
-            <div class="mensaje-error">
-                <?php echo $mensaje; ?>
+                    </div>
+
+                <?php endif; ?>
+
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label
+                            for="nombre"
+                            class="form-label"
+                        >
+                            Nombre del curso
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="nombre"
+                            name="nombre"
+                            value="<?= escapar($nombre) ?>"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="mb-3">
+
+                        <label
+                            for="descripcion"
+                            class="form-label"
+                        >
+                            Descripción
+                        </label>
+
+                        <textarea
+                            class="form-control"
+                            id="descripcion"
+                            name="descripcion"
+                            rows="4"
+                        ><?= escapar($descripcion) ?></textarea>
+
+                    </div>
+
+
+                    <div class="mb-4">
+
+                        <label
+                            for="estado"
+                            class="form-label"
+                        >
+                            Estado
+                        </label>
+
+                        <select
+                            class="form-select"
+                            id="estado"
+                            name="estado"
+                        >
+
+                            <option
+                                value="ACTIVO"
+                                <?= $estado === "ACTIVO"
+                                    ? "selected"
+                                    : ""
+                                ?>
+                            >
+                                ACTIVO
+                            </option>
+
+                            <option
+                                value="INACTIVO"
+                                <?= $estado === "INACTIVO"
+                                    ? "selected"
+                                    : ""
+                                ?>
+                            >
+                                INACTIVO
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Guardar curso
+                    </button>
+
+
+                    <a
+                        href="index.php"
+                        class="btn btn-secondary"
+                    >
+                        Cancelar
+                    </a>
+
+                </form>
+
             </div>
 
-        <?php } ?>
-
-        <form method="POST">
-
-            <div class="grupo-formulario">
-
-                <label for="nombre">
-                    Nombre del curso
-                </label>
-
-                <input
-                    type="text"
-                    id="nombre"
-                    name="nombre"
-                    required
-                >
-
-            </div>
-
-
-            <div class="grupo-formulario">
-
-                <label for="descripcion">
-                    Descripción
-                </label>
-
-                <textarea
-                    id="descripcion"
-                    name="descripcion"
-                    rows="5"
-                ></textarea>
-
-            </div>
-
-
-            <div class="grupo-formulario">
-
-                <label for="estado">
-                    Estado
-                </label>
-
-                <select
-                    id="estado"
-                    name="estado"
-                >
-
-                    <option value="ACTIVO">
-                        ACTIVO
-                    </option>
-
-                    <option value="INACTIVO">
-                        INACTIVO
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <div class="botones">
-
-                <button
-                    type="submit"
-                    class="btn-primario"
-                >
-                    Guardar curso
-                </button>
-
-                <a
-                    href="index.php"
-                    class="btn-secundario"
-                >
-                    Cancelar
-                </a>
-
-            </div>
-
-        </form>
+        </div>
 
     </div>
 
-</main>
+</div>
 
-<footer>
-
-    Agenda Escolar © 2026
-
-</footer>
-
-</body>
-
-</html>
+<?php require_once "../../includes/footer.php"; ?>
