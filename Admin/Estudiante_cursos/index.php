@@ -9,37 +9,36 @@ exigirRol("ADMIN");
 
 try {
 
-    // Consultamos las asignaciones realizadas.
-    $sql = "SELECT
-                docente_asignacion.id,
+    /*
+     * Consultamos las asignaciones de estudiantes.
+     *
+     * Los estudiantes están guardados en la tabla usuarios.
+     * Se identifican porque tienen rol_id = 3.
+     */
 
-                usuarios.nombres,
-                usuarios.apellidos,
+    $sql = "
+        SELECT
+            ec.id,
+            u.nombres,
+            u.apellidos,
+            c.nombre AS curso,
+            p.nombre AS periodo
 
-                cursos.nombre AS curso,
+        FROM estudiante_curso ec
 
-                asignaturas.nombre AS asignatura,
+        INNER JOIN usuarios u
+            ON ec.estudiante_id = u.id
 
-                periodos_academicos.nombre AS periodo
+        INNER JOIN cursos c
+            ON ec.curso_id = c.id
 
-            FROM docente_asignacion
+        INNER JOIN periodos_academicos p
+            ON ec.periodo_id = p.id
 
-            INNER JOIN usuarios
-                ON docente_asignacion.docente_id = usuarios.id
+        WHERE u.rol_id = 3
 
-            INNER JOIN cursos
-                ON docente_asignacion.curso_id = cursos.id
-
-            INNER JOIN asignaturas
-                ON docente_asignacion.asignatura_id = asignaturas.id
-
-            INNER JOIN periodos_academicos
-                ON docente_asignacion.periodo_id = periodos_academicos.id
-
-            ORDER BY
-                usuarios.nombres ASC,
-                cursos.nombre ASC,
-                asignaturas.nombre ASC";
+        ORDER BY ec.id DESC
+    ";
 
     $sentencia = $conexion->prepare($sql);
 
@@ -53,7 +52,7 @@ try {
 
 }
 
-$tituloPagina = "Asignación de Docentes";
+$tituloPagina = "Asignación de Estudiantes";
 
 require_once "../../includes/header.php";
 
@@ -66,7 +65,7 @@ require_once "../../includes/header.php";
         <div class="d-flex justify-content-between align-items-center mb-4">
 
             <h1 class="mb-0">
-                Asignación de Docentes
+                Asignación de Estudiantes
             </h1>
 
             <a
@@ -83,7 +82,7 @@ require_once "../../includes/header.php";
 
             <div class="alert alert-info">
 
-                No hay asignaciones registradas actualmente.
+                No hay estudiantes asignados actualmente.
 
             </div>
 
@@ -99,11 +98,9 @@ require_once "../../includes/header.php";
 
                             <th>ID</th>
 
-                            <th>Docente</th>
+                            <th>Estudiante</th>
 
                             <th>Curso</th>
-
-                            <th>Asignatura</th>
 
                             <th>Período</th>
 
@@ -112,7 +109,6 @@ require_once "../../includes/header.php";
                         </tr>
 
                     </thead>
-
 
                     <tbody>
 
@@ -124,49 +120,28 @@ require_once "../../includes/header.php";
                                     <?= escapar($asignacion["id"]) ?>
                                 </td>
 
-
                                 <td>
-
                                     <?= escapar(
-                                        $asignacion["nombres"]
-                                        . " "
-                                        . $asignacion["apellidos"]
+                                        $asignacion["nombres"] . " " .
+                                        $asignacion["apellidos"]
                                     ) ?>
-
                                 </td>
-
 
                                 <td>
                                     <?= escapar($asignacion["curso"]) ?>
                                 </td>
 
-
-                                <td>
-                                    <?= escapar($asignacion["asignatura"]) ?>
-                                </td>
-
-
                                 <td>
                                     <?= escapar($asignacion["periodo"]) ?>
                                 </td>
 
-
                                 <td>
 
                                     <a
-                                        href="editar.php?id=<?= escapar($asignacion["id"]) ?>"
+                                        href="editar.php?id=<?= $asignacion["id"] ?>"
                                         class="btn btn-warning btn-sm"
                                     >
                                         Editar
-                                    </a>
-
-
-                                    <a
-                                        href="eliminar.php?id=<?= escapar($asignacion["id"]) ?>"
-                                        class="btn btn-danger btn-sm"
-                                        onclick="return confirm('¿Está seguro de eliminar esta asignación?');"
-                                    >
-                                        Eliminar
                                     </a>
 
                                 </td>
@@ -184,20 +159,20 @@ require_once "../../includes/header.php";
         <?php endif; ?>
 
 
-        <a
-            href="../index.php"
-            class="btn btn-secondary mt-3"
-        >
-            Volver al panel
-        </a>
+        <div class="mt-4">
+
+            <a
+                href="../index.php"
+                class="btn btn-secondary"
+            >
+                Volver al panel
+            </a>
+
+        </div>
 
     </div>
 
 </div>
 
 
-<?php
-
-require_once "../../includes/footer.php";
-
-?>
+<?php require_once "../../includes/footer.php"; ?>
